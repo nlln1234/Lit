@@ -85,23 +85,28 @@ if (!window.__litPromise) {
       return m;
   });
 }
-4.2. 데이터 바인딩 전략
+
+### 4.2. 데이터 바인딩 전략
+
 이 컴포넌트는 두 가지 방식의 데이터 주입을 지원합니다.
 
-🔹 슬롯 방식 (UI 위젯 주입)
-제목, 날짜 등 단일 텍스트나 UI는 OutSystems 위젯(Expression 등)을 배치하고
-Attribute 속성에 slot="name"을 지정하여 주입합니다.
+#### 🔹 슬롯 방식 (UI 위젯 주입)
 
-장점: OutSystems에서 폰트, 색상, 스타일을 자유롭게 제어할 수 있습니다.
+제목, 날짜 등 단일 텍스트나 UI는 OutSystems 위젯(Expression 등)을 배치하고  
+Attribute 속성에 `slot="name"`을 지정하여 주입합니다.
 
-🔹 속성 방식 (대량 데이터 주입)
+**장점**: OutSystems에서 폰트, 색상, 스타일을 자유롭게 제어할 수 있습니다.
+
+#### 🔹 속성 방식 (대량 데이터 주입)
+
 차트 데이터, 테이블 리스트 등 복잡한 데이터는 JSON 또는 List 형태로 변환하여 Lit 프로퍼티에 주입합니다.
 
-예시: rowSalesValues (Text List), activeTab (Text)
+예시: `rowSalesValues` (Text List), `activeTab` (Text)
 
-📝 5. 참고 사항
-IDE: Google Anti-Gravity
+---
 
-핵심 기술: Lit 3.0, OutSystems O11
+## 📝 5. 참고 사항
 
-Created with: Google Anti-Gravity
+- **IDE**: Google Anti-Gravity  
+- **핵심 기술**: Lit 3.0, OutSystems O11  
+- **Created with**: Google Anti-Gravity
