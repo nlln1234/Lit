@@ -55,8 +55,9 @@ Lit는 Shadow DOM을 기본으로 사용하여, 컴포넌트의 스타일이 Out
 
 ## 🛠️ 3. Anti-Gravity 워크플로우
 
-이 프로젝트는 Google Anti-Gravity IDE를 활용한 2단계 바이브 코딩 프로세스로 진행됩니다.  
+이 프로젝트는 Google Anti-Gravity IDE를 활용한 2단계 바이브 코딩 프로세스로 진행됩니다.
 `.agent` 폴더의 `guide.md` 파일을 Workspace 룰에 추가하고 에이전트에게 디자인을 요청합니다.
+저는 SampleData.js에 데이터 구조를 에이전트에게 알려주고 대시보드를 디자인 해달라고 요청했습니다.
 
 ### 🌊 1단계: HTML 프로토타이핑 (index.html)
 
@@ -67,15 +68,6 @@ Lit는 Shadow DOM을 기본으로 사용하여, 컴포넌트의 스타일이 Out
 
 - OutSystems에 바로 붙여넣을 수 있게 변환된 js코드입니다.
 - 검증된 HTML 코드를 Lit Class로 변환하여 컴포넌트화합니다.
-
-### 🌊 3단계: 슬롯화 (선택)
-
-- 슬롯 시스템: OutSystems 데이터를 주입할 수 있도록 주요 UI 영역을 슬롯으로 변환합니다.
-
-  예: index.html파일에서 <h1>Banking Overview</h1>을 → <h1>{{Title}}</h1> 로 바꾸고 슬롯화를 요청하면
-  outsystems-component.js파일에 해당 부분이 `<slot name="Title">...</slot>` 으로 바뀝니다.
-  
----
 
 ## 🚀 4. OutSystems 적용 가이드
 
