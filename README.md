@@ -56,8 +56,10 @@ Lit는 Shadow DOM을 기본으로 사용하여, 컴포넌트의 스타일이 Out
 ## 🛠️ 3. Anti-Gravity 워크플로우
 
 이 프로젝트는 Google Anti-Gravity IDE를 활용한 2단계 바이브 코딩 프로세스로 진행됩니다.<br>
-`.agent` 폴더의 `guide.md` 파일을 Workspace 룰에 추가하고 에이전트에게 디자인을 요청합니다.<br>
-저는 SampleData.js에 데이터 구조를 에이전트에게 알려주고 대시보드를 디자인 해달라고 요청했습니다.
+
+### 프롬프트 작성
+- `.agent` 폴더의 `guide.md` 파일을 Workspace 룰에 추가하고 에이전트에게 디자인을 요청합니다.
+- SampleData.js에 데이터 구조를 에이전트에게 알려주고 대시보드를 디자인 해달라고 요청했습니다.
 
 ### 🌊 1단계: HTML 프로토타이핑 (index.html)
 
