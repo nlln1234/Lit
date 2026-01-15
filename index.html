@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Overview Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --hover-color: #e0e7ff;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 40px;
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            color: #111827;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-card h3 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        .kpi-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 8px;
+            color: #111827;
+        }
+
+        .kpi-card .trend {
+            font-size: 13px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend.up {
+            color: var(--success-color);
+        }
+
+        .trend.down {
+            color: var(--danger-color);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            /* Fixed Chart width, Flex Grid */
+            min-height: 600px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-section {
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+            background: #fafafa;
+        }
+
+        .grid-section {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* Needed for scrolling table */
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reset-btn {
+            font-size: 12px;
+            color: var(--primary-color);
+            background: none;
+            border: 1px solid var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            visibility: hidden;
+        }
+
+        .reset-btn.visible {
+            visibility: visible;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        /* Controls: Search & Export */
+        .grid-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .export-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .export-btn:hover {
+            background-color: #059669;
+        }
+
+        /* Sortable Table */
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-sub);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 10;
+        }
+
+        th:hover {
+            color: var(--primary-color);
+        }
+
+        th::after {
+            content: '↕';
+            font-size: 10px;
+            margin-left: 4px;
+            opacity: 0.3;
+        }
+
+        th.sort-asc::after {
+            content: '↑';
+            opacity: 1;
+            color: var(--primary-color);
+        }
+
+        th.sort-desc::after {
+            content: '↓';
+            opacity: 1;
+            color: var(--primary-color);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: #374151;
+        }
+
+        tr {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        tr.highlight td {
+            background-color: var(--hover-color);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .currency {
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-overlay.open .modal-container {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #111827;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #111827;
+        }
+
+        .modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .detail-item {
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Banking Overview</h1>
+        </div>
+
+        <!-- KPI Section -->
+        <div class="kpi-grid">
+            <div class="card kpi-card">
+                <h3>Total Assets</h3>
+                <div class="value" id="total-assets">-</div>
+                <div class="trend up">▲ 2.5% vs last month</div>
+            </div>
+            <div class="card kpi-card">
+                <h3>Active Accounts</h3>
+                <div class="value" id="active-accounts">-</div>
+                <div class="trend up">▲ 12 New accounts</div>
+            </div>
+            <div class="card kpi-card">
+                <h3>Avg. Balance</h3>
+                <div class="value" id="avg-balance">-</div>
+                <div class="trend down">▼ 1.2% vs last month</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Sidebar: Chart -->
+            <div class="chart-section">
+                <div class="section-title">
+                    Top Accounts
+                    <button id="reset-filter" class="reset-btn" onclick="resetFilter()">Reset Selection</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="balanceChart"></canvas>
+                </div>
+                <p style="font-size: 13px; color: #6b7280; margin-top: 16px; text-align: center;">
+                    Select a bar to highlight details.
+                </p>
+            </div>
+
+            <!-- Main: Grid with Controls -->
+            <div class="grid-section">
+                <div class="section-title">Account List</div>
+
+                <div class="grid-controls">
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="Search by Name or Account No..." oninput="handleSearch()">
+                    <button class="export-btn" onclick="exportToCSV()">
+                        ⬇ Export CSV
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('Name')">Name</th>
+                                <th onclick="sortTable('Balance')">Balance</th>
+                                <th onclick="sortTable('IsActive')">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="account-table-body">
+                            <!-- JS Rendered -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #6b7280; text-align: right;">
+                    * Click row to view full details
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-name">Account Name</h2>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;" id="modal-id">ID: #000</div>
+                </div>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-item">
+                    <div class="detail-label">Account Number</div>
+                    <div class="detail-value" id="modal-acc-no">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Current Balance</div>
+                    <div class="detail-value" style="color: var(--primary-color); font-size: 16px;" id="modal-balance">-
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" id="modal-status">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Overdraft Limit</div>
+                    <div class="detail-value" id="modal-overdraft">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Created Date</div>
+                    <div class="detail-value" id="modal-created">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Manager ID</div>
+                    <div class="detail-value" id="modal-manager">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Mock Data (Extended with more fields)
+        const rawData = [
+            { "Sample_Accounts": { "Id": 249, "Name": "Dennis Wise", "AccountNumber": 27209427, "Balance": 52365, "IsActive": true, "CreatedOn": "1998-08-03", "Overdraft": 1500, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 250, "Name": "Edward Williams", "AccountNumber": 49217033, "Balance": 8320, "IsActive": true, "CreatedOn": "1998-08-04", "Overdraft": 1000, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 251, "Name": "Andrea McCarthy", "AccountNumber": 35692671, "Balance": 50001, "IsActive": false, "CreatedOn": "1998-08-05", "Overdraft": 0, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 252, "Name": "Maggie Todd", "AccountNumber": 26293664, "Balance": 4429, "IsActive": true, "CreatedOn": "1998-08-06", "Overdraft": 500, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 253, "Name": "Fannie Woods", "AccountNumber": 66139041, "Balance": 3420, "IsActive": true, "CreatedOn": "1998-08-07", "Overdraft": 500, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 254, "Name": "Willie Gibbs", "AccountNumber": 70302466, "Balance": 17724, "IsActive": true, "CreatedOn": "1998-08-08", "Overdraft": 2000, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 255, "Name": "Dale Quinn", "AccountNumber": 49507570, "Balance": 81025, "IsActive": false, "CreatedOn": "1998-08-09", "Overdraft": 5000, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 256, "Name": "Erik Hubbard", "AccountNumber": 69224662, "Balance": 37226, "IsActive": true, "CreatedOn": "1998-08-10", "Overdraft": 1500, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 257, "Name": "Ivan Gill", "AccountNumber": 63266225, "Balance": 55012, "IsActive": false, "CreatedOn": "1998-08-11", "Overdraft": 3000, "Manager": 446 } },
+            { "Sample_Accounts": { "Id": 258, "Name": "Robert Holland", "AccountNumber": 85142770, "Balance": 33914, "IsActive": true, "CreatedOn": "1998-08-12", "Overdraft": 1500, "Manager": 446 } }
+        ];
+
+        const allAccounts = rawData.map(item => item.Sample_Accounts);
+        let sortState = { key: 'Balance', dir: 'desc' };
+        let selectedAccountId = null; // From Chart
+        let searchQuery = '';
+        let chartInstance = null;
+
+        // --- Core Logic ---
+        function getProcessedData() {
+            let processed = [...allAccounts];
+
+            // 1. Filter by Search
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                processed = processed.filter(a =>
+                    a.Name.toLowerCase().includes(q) ||
+                    String(a.AccountNumber).includes(q)
+                );
+            }
+
+            // 2. Filter by Chart Selection (Highlight Logic: Move to top or just filter?)
+            // Let's Filter grid to only show selected if chart is clicked.
+            if (selectedAccountId) {
+                processed = processed.filter(a => a.Id === selectedAccountId);
+            }
+
+            // 3. Sort
+            processed.sort((a, b) => {
+                let valA = a[sortState.key];
+                let valB = b[sortState.key];
+
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return sortState.dir === 'asc' ? -1 : 1;
+                if (valA > valB) return sortState.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            return processed;
+        }
+
+        // --- KPI ---
+        function calculateKPI() {
+            const total = allAccounts.reduce((sum, acc) => sum + acc.Balance, 0);
+            const activeCount = allAccounts.filter(acc => acc.IsActive).length;
+            const avg = total / allAccounts.length;
+
+            document.getElementById('total-assets').textContent = '$' + total.toLocaleString();
+            document.getElementById('active-accounts').textContent = activeCount;
+            document.getElementById('avg-balance').textContent = '$' + Math.round(avg).toLocaleString();
+        }
+
+        // --- Chart ---
+        function renderChart() {
+            const ctx = document.getElementById('balanceChart').getContext('2d');
+            const sortedForChart = [...allAccounts].sort((a, b) => b.Balance - a.Balance).slice(0, 10);
+
+            const backgroundColors = sortedForChart.map(acc =>
+                acc.Id === selectedAccountId ? '#ef4444' : '#4f46e5'
+            );
+
+            const config = {
+                type: 'bar',
+                data: {
+                    labels: sortedForChart.map(a => a.Name.split(' ')[0]),
+                    datasets: [{
+                        label: 'Balance',
+                        data: sortedForChart.map(a => a.Balance),
+                        backgroundColor: backgroundColors,
+                        borderRadius: 4,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            handleChartClick(sortedForChart[index].Id);
+                        } else {
+                            resetFilter();
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (c) => '$' + c.raw.toLocaleString() } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: true, borderDash: [2, 2] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            };
+
+            if (chartInstance) {
+                chartInstance.data = config.data;
+                chartInstance.options = config.options;
+                chartInstance.update();
+            } else {
+                chartInstance = new Chart(ctx, config);
+            }
+        }
+
+        function handleChartClick(id) {
+            selectedAccountId = id;
+            document.getElementById('reset-filter').classList.add('visible');
+            renderChart();
+            renderList();
+        }
+
+        window.resetFilter = function () {
+            selectedAccountId = null;
+            document.getElementById('reset-filter').classList.remove('visible');
+            renderChart();
+            renderList();
+        };
+
+        // --- Search ---
+        window.handleSearch = function () {
+            searchQuery = document.getElementById('searchInput').value;
+            renderList();
+        };
+
+        // --- List & Sorting ---
+        window.sortTable = function (key) {
+            if (sortState.key === key) {
+                sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.key = key;
+                sortState.dir = 'desc';
+            }
+            renderList();
+            updateHeaderStyles();
+        };
+
+        function updateHeaderStyles() {
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                const headerText = th.textContent;
+
+                let match = false;
+                if (sortState.key === 'Name' && headerText === 'Name') match = true;
+                if (sortState.key === 'Balance' && headerText === 'Balance') match = true;
+                if (sortState.key === 'IsActive' && headerText === 'Status') match = true;
+
+                if (match) {
+                    th.classList.add(sortState.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+
+        function renderList() {
+            const tbody = document.getElementById('account-table-body');
+            const data = getProcessedData();
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(acc => `
+            <tr class="${acc.Id === selectedAccountId ? 'highlight' : ''}" onclick="openModal(${acc.Id})">
+                <td>
+                    <div style="font-weight: 500; color: #111827;">${acc.Name}</div>
+                    <div style="font-size: 11px; color: #9ca3af;">****${String(acc.AccountNumber).slice(-4)}</div>
+                </td>
+                <td class="currency" style="color: ${acc.Balance > 50000 ? '#4f46e5' : '#374151'}">
+                    $${acc.Balance.toLocaleString()}
+                </td>
+                <td>
+                    <span class="status-badge ${acc.IsActive ? 'status-active' : 'status-inactive'}">
+                        ${acc.IsActive ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+        }
+
+        // --- Modal Logic ---
+        window.openModal = function (id) {
+            const acc = allAccounts.find(a => a.Id === id);
+            if (!acc) return;
+
+            document.getElementById('modal-name').textContent = acc.Name;
+            document.getElementById('modal-id').textContent = `ID: #${acc.Id}`;
+            document.getElementById('modal-acc-no').textContent = acc.AccountNumber;
+            document.getElementById('modal-balance').textContent = '$' + acc.Balance.toLocaleString();
+            document.getElementById('modal-status').textContent = acc.IsActive ? 'Active' : 'Inactive';
+            document.getElementById('modal-status').style.color = acc.IsActive ? 'var(--success-color)' : 'var(--danger-color)';
+            document.getElementById('modal-overdraft').textContent = '$' + (acc.Overdraft || 0).toLocaleString();
+            document.getElementById('modal-created').textContent = acc.CreatedOn.split('T')[0]; // Format date
+            document.getElementById('modal-manager').textContent = acc.Manager;
+
+            document.getElementById('detailModal').classList.add('open');
+        };
+
+        window.closeModal = function () {
+            document.getElementById('detailModal').classList.remove('open');
+        };
+
+        // Close modal on click outside
+        document.getElementById('detailModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('detailModal')) closeModal();
+        });
+
+        // --- Export CSV ---
+        window.exportToCSV = function () {
+            const data = getProcessedData();
+            if (!data.length) return alert('No data to export');
+
+            const headers = ["ID", "Name", "AccountNumber", "Balance", "IsActive", "CreatedOn"];
+            const csvRows = [];
+
+            // Add Header
+            csvRows.push(headers.join(','));
+
+            // Add Data
+            data.forEach(row => {
+                const values = headers.map(header => {
+                    const val = row[header] !== undefined ? row[header] : '';
+                    return `"${val}"`; // wrap in quotes for safety
+                });
+                csvRows.push(values.join(','));
+            });
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "banking_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            calculateKPI();
+            renderChart();
+            renderList();
+            updateHeaderStyles();
+        });
+
+    </script>
+</body>
+
+</html>
