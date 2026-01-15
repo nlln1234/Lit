@@ -58,17 +58,23 @@ Lit는 Shadow DOM을 기본으로 사용하여, 컴포넌트의 스타일이 Out
 이 프로젝트는 Google Anti-Gravity IDE를 활용한 2단계 바이브 코딩 프로세스로 진행됩니다.  
 `.agent` 폴더의 `guide.md` 파일을 Workspace 룰에 추가하고 에이전트에게 디자인을 요청합니다.
 
-### 🌊 1단계: HTML 프로토타이핑 (HTML-First)
+### 🌊 1단계: HTML 프로토타이핑 (index.html)
 
 - OutSystems 종속성 없이, 순수 HTML/JS 환경에서 디자인과 기능을 먼저 완성합니다.
 - AI 에이전트를 활용하여 피그마 시안과 동일한 수준의 시각적 완성도를 빠르게 확보합니다.
 
-### 🌊 2단계: Lit 캡슐화 및 슬롯 적용
+### 🌊 2단계: Lit 캡슐화 (outsystems-component.js)
 
-- 검증된 HTML 코드를 Lit Class로 변환하여 컴포넌트화합니다. (`outsystems-component.js`)
-- **슬롯 시스템**: OutSystems 데이터를 주입할 수 있도록 주요 UI 영역을 슬롯으로 변환합니다.  
-  예: 정적 텍스트 → `<slot name="title">...</slot>`
+- OutSystems에 바로 붙여넣을 수 있게 변환된 js코드입니다.
+- 검증된 HTML 코드를 Lit Class로 변환하여 컴포넌트화합니다.
 
+### 🌊 3단계: 슬롯화 (선택)
+
+- 슬롯 시스템: OutSystems 데이터를 주입할 수 있도록 주요 UI 영역을 슬롯으로 변환합니다.
+
+  예: index.html파일에서 <h1>Banking Overview</h1>을 → <h1>{{Title}}</h1> 로 바꾸고 슬롯화를 요청하면
+  outsystems-component.js파일에 해당 부분이 `<slot name="Title">...</slot>` 으로 바뀝니다.
+  
 ---
 
 ## 🚀 4. OutSystems 적용 가이드
