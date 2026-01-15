@@ -85,6 +85,7 @@ if (!window.__litPromise) {
       return m;
   });
 }
+```
 
 ### 4.2. 데이터 바인딩 전략
 
